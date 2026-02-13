@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maze Game - Level by Level</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #4CAF50, #2196F3);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .subtitle {
+            color: #aaa;
+            font-size: 1rem;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .control-panel {
+            background: rgba(30, 30, 46, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            width: 100%;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: rgba(20, 20, 30, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .stat-label {
+            color: #aaa;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #4CAF50, #2E7D32);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(90deg, #66BB6A, #388E3C);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(90deg, #2196F3, #0D47A1);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(90deg, #42A5F5, #1565C0);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(90deg, #f44336, #c62828);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(90deg, #ef5350, #d32f2f);
+            transform: translateY(-2px);
+        }
+
+        .maze-container {
+            background: rgba(30, 30, 46, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            width: 100%;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            overflow: auto;
+        }
+
+        #maze {
+            display: grid;
+            gap: 1px;
+            background-color: #111;
+            padding: 10px;
+            border-radius: 8px;
+            border: 2px solid #333;
+        }
+
+        .cell {
+            border-radius: 2px;
+            transition: all 0.2s;
+        }
+
+        .wall {
+            background-color: #2c3e50;
+        }
+
+        .path {
+            background-color: #1a1a2e;
+        }
+
+        .start {
+            background-color: #4CAF50;
+            box-shadow: 0 0 8px #4CAF50;
+        }
+
+        .exit {
+            background-color: #FF9800;
+            box-shadow: 0 0 8px #FF9800;
+        }
+
+        .player {
+            background-color: #2196F3;
+            box-shadow: 0 0 10px #2196F3;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .player::after {
+            content: '';
+            position: absolute;
+            top: 25%;
+            left: 25%;
+            width: 50%;
+            height: 50%;
+            background-color: white;
+            border-radius: 50%;
+        }
+
+        .instructions {
+            background: rgba(30, 30, 46, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            width: 100%;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            margin-top: 20px;
+        }
+
+        .instructions h3 {
+            color: #4CAF50;
+            margin-bottom: 10px;
+        }
+
+        .instructions p {
+            color: #ccc;
+            line-height: 1.6;
+        }
+
+        .level-complete-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #2c3e50 100%);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content h2 {
+            color: #4CAF50;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .modal-stats {
+            margin: 20px 0;
+            font-size: 1.2rem;
+        }
+
+        .modal-stats p {
+            margin: 10px 0;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎮 Maze Game</h1>
+        <p class="subtitle">Navigate through levels and reach the exit!</p>
+    </div>
+    
+    <div class="container">
+        <div class="control-panel">
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-value" id="level-value">1</div>
+                    <div class="stat-label">Level</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="steps-value">0</div>
+                    <div class="stat-label">Steps</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="time-value">0s</div>
+                    <div class="stat-label">Time</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="score-value">0</div>
+                    <div class="stat-label">Total Score</div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button id="reset-btn" class="btn-secondary">Reset Position</button>
+                <button id="restart-btn" class="btn-danger">Restart Game</button>
+            </div>
+        </div>
+        
+        <div class="maze-container">
+            <div id="maze"></div>
+        </div>
+        
+        <div class="instructions">
+            <h3>📖 How to Play</h3>
+            <p>• Use <strong>Arrow Keys</strong> or <strong>WASD</strong> to move the blue player</p>
+            <p>• Navigate from the <strong style="color: #4CAF50;">green start</strong> to the <strong style="color: #FF9800;">orange exit</strong></p>
+            <p>• Complete each level to unlock the next one with a larger maze</p>
+            <p>• Try to complete each level with fewer steps and less time for a higher score!</p>
+        </div>
+    </div>
+
+    <!-- Level Complete Modal -->
+    <div id="level-complete-modal" class="level-complete-modal">
+        <div class="modal-content">
+            <h2>🎉 Level Complete!</h2>
+            <div class="modal-stats">
+                <p><strong>Steps:</strong> <span id="modal-steps">0</span></p>
+                <p><strong>Time:</strong> <span id="modal-time">0</span>s</p>
+                <p><strong>Level Score:</strong> <span id="modal-score">0</span></p>
+            </div>
+            <button id="next-level-btn" class="btn-primary" style="font-size: 1.2rem; padding: 15px 30px;">Next Level →</button>
+        </div>
+    </div>
+
+    <script>
+        // === GAME CONFIGURATION ===
+        const LEVELS = [
+            { rows: 11, cols: 15 },   // Level 1
+            { rows: 15, cols: 19 },   // Level 2
+            { rows: 19, cols: 23 },   // Level 3
+            { rows: 23, cols: 27 },   // Level 4
+            { rows: 27, cols: 31 },   // Level 5
+            { rows: 31, cols: 35 },   // Level 6
+            { rows: 35, cols: 39 },   // Level 7
+            { rows: 39, cols: 43 },   // Level 8
+            { rows: 43, cols: 47 },   // Level 9
+            { rows: 47, cols: 51 }    // Level 10
+        ];
+        
+        const MIN_CELL_SIZE = 15;
+        
+        // === GAME STATE ===
+        let currentLevel = 0;
+        let rows = LEVELS[0].rows;
+        let cols = LEVELS[0].cols;
+        let maze = [];
+        let player = { x: 0, y: 0 };
+        let exit = { x: 0, y: 0 };
+        let start = { x: 0, y: 0 };
+        let steps = 0;
+        let seconds = 0;
+        let timer = null;
+        let totalScore = 0;
+        
+        // === DOM ELEMENTS ===
+        const mazeElement = document.getElementById('maze');
+        const levelValueElement = document.getElementById('level-value');
+        const stepsValueElement = document.getElementById('steps-value');
+        const timeValueElement = document.getElementById('time-value');
+        const scoreValueElement = document.getElementById('score-value');
+        const resetButton = document.getElementById('reset-btn');
+        const restartButton = document.getElementById('restart-btn');
+        const levelCompleteModal = document.getElementById('level-complete-modal');
+        const nextLevelButton = document.getElementById('next-level-btn');
+        const modalSteps = document.getElementById('modal-steps');
+        const modalTime = document.getElementById('modal-time');
+        const modalScore = document.getElementById('modal-score');
+        
+        // === MAZE GENERATION ===
+        
+        // Create empty maze filled with walls
+        function createEmptyMaze() {
+            maze = [];
+            for (let i = 0; i < rows; i++) {
+                maze[i] = [];
+                for (let j = 0; j < cols; j++) {
+                    maze[i][j] = 1; // 1 = wall
+                }
+            }
+        }
+        
+        // Generate maze using Randomized Depth-First Search algorithm
+        function generateMaze() {
+            const stack = [];
+            
+            // Start from top-left corner (ensure odd position)
+            start = { x: 1, y: 1 };
+            maze[start.x][start.y] = 0; // 0 = path
+            stack.push(start);
+            
+            // Directions: up, right, down, left (moving by 2 cells)
+            const directions = [
+                { dx: -2, dy: 0 },
+                { dx: 0, dy: 2 },
+                { dx: 2, dy: 0 },
+                { dx: 0, dy: -2 }
+            ];
+            
+            // Depth-first search maze generation
+            while (stack.length > 0) {
+                const current = stack[stack.length - 1];
+                const neighbors = [];
+                
+                // Find all valid unvisited neighbors
+                for (const dir of directions) {
+                    const newX = current.x + dir.dx;
+                    const newY = current.y + dir.dy;
+                    
+                    if (newX > 0 && newX < rows - 1 && 
+                        newY > 0 && newY < cols - 1 && 
+                        maze[newX][newY] === 1) {
+                        neighbors.push({ x: newX, y: newY, dir });
+                    }
+                }
+                
+                if (neighbors.length > 0) {
+                    // Choose random neighbor
+                    const randomNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
+                    
+                    // Remove wall between current and neighbor
+                    const wallX = current.x + randomNeighbor.dir.dx / 2;
+                    const wallY = current.y + randomNeighbor.dir.dy / 2;
+                    maze[wallX][wallY] = 0;
+                    maze[randomNeighbor.x][randomNeighbor.y] = 0;
+                    
+                    stack.push({ x: randomNeighbor.x, y: randomNeighbor.y });
+                } else {
+                    stack.pop(); // Backtrack
+                }
+            }
+            
+            // Find furthest point from start for exit using BFS
+            exit = findFurthestPoint(start);
+            
+            // Set player at start
+            player = { x: start.x, y: start.y };
+        }
+        
+        // Find furthest reachable point from a given position using BFS
+        function findFurthestPoint(from) {
+            const queue = [{ x: from.x, y: from.y, dist: 0 }];
+            const visited = new Set([`${from.x},${from.y}`]);
+            let furthest = from;
+            let maxDist = 0;
+            
+            const directions = [
+                { dx: -1, dy: 0 },
+                { dx: 0, dy: 1 },
+                { dx: 1, dy: 0 },
+                { dx: 0, dy: -1 }
+            ];
+            
+            while (queue.length > 0) {
+                const current = queue.shift();
+                
+                if (current.dist > maxDist) {
+                    maxDist = current.dist;
+                    furthest = { x: current.x, y: current.y };
+                }
+                
+                for (const dir of directions) {
+                    const newX = current.x + dir.dx;
+                    const newY = current.y + dir.dy;
+                    const key = `${newX},${newY}`;
+                    
+                    if (newX >= 0 && newX < rows && 
+                        newY >= 0 && newY < cols && 
+                        maze[newX][newY] === 0 && 
+                        !visited.has(key)) {
+                        visited.add(key);
+                        queue.push({ x: newX, y: newY, dist: current.dist + 1 });
+                    }
+                }
+            }
+            
+            return furthest;
+        }
+        
+        // === RENDERING ===
+        
+        // Draw the maze on screen
+        function drawMaze() {
+            // Calculate cell size to fit screen
+            const maxWidth = Math.min(1100, window.innerWidth * 0.85);
+            const maxHeight = Math.min(600, window.innerHeight * 0.6);
+            
+            const cellSize = Math.max(
+                MIN_CELL_SIZE,
+                Math.min(
+                    Math.floor(maxWidth / cols),
+                    Math.floor(maxHeight / rows)
+                )
+            );
+            
+            // Set grid layout
+            mazeElement.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
+            mazeElement.style.gridTemplateRows = `repeat(${rows}, ${cellSize}px)`;
+            mazeElement.innerHTML = '';
+            
+            // Create cells
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.style.width = `${cellSize}px`;
+                    cell.style.height = `${cellSize}px`;
+                    
+                    // Determine cell type
+                    if (maze[i][j] === 1) {
+                        cell.classList.add('wall');
+                    } else {
+                        cell.classList.add('path');
+                    }
+                    
+                    // Mark special cells
+                    if (i === player.x && j === player.y) {
+                        cell.classList.add('player');
+                    } else if (i === start.x && j === start.y) {
+                        cell.classList.add('start');
+                    } else if (i === exit.x && j === exit.y) {
+                        cell.classList.add('exit');
+                    }
+                    
+                    mazeElement.appendChild(cell);
+                }
+            }
+        }
+        
+        // === GAME LOGIC ===
+        
+        // Move player in specified direction
+        function movePlayer(dx, dy) {
+            const newX = player.x + dx;
+            const newY = player.y + dy;
+            
+            // Check if move is valid
+            if (newX >= 0 && newX < rows && 
+                newY >= 0 && newY < cols && 
+                maze[newX][newY] === 0) {
+                player.x = newX;
+                player.y = newY;
+                steps++;
+                stepsValueElement.textContent = steps;
+                
+                drawMaze();
+                checkWin();
+            }
+        }
+        
+        // Check if player reached the exit
+        function checkWin() {
+            if (player.x === exit.x && player.y === exit.y) {
+                clearInterval(timer);
+                
+                // Calculate score
+                const timeBonus = Math.max(0, 100 - seconds);
+                const stepBonus = Math.max(0, 200 - steps);
+                const levelBonus = (currentLevel + 1) * 100;
+                const levelScore = timeBonus + stepBonus + levelBonus;
+                totalScore += levelScore;
+                
+                // Show level complete modal
+                modalSteps.textContent = steps;
+                modalTime.textContent = seconds;
+                modalScore.textContent = levelScore;
+                scoreValueElement.textContent = totalScore;
+                
+                levelCompleteModal.style.display = 'flex';
+            }
+        }
+        
+        // Reset player to start position
+        function resetPlayerPosition() {
+            player = { x: start.x, y: start.y };
+            steps = 0;
+            stepsValueElement.textContent = steps;
+            drawMaze();
+        }
+        
+        // Start next level
+        function nextLevel() {
+            levelCompleteModal.style.display = 'none';
+            
+            currentLevel++;
+            if (currentLevel >= LEVELS.length) {
+                alert(`🎉 Congratulations! You completed all ${LEVELS.length} levels!\n\nFinal Score: ${totalScore}`);
+                currentLevel = LEVELS.length - 1;
+                return;
+            }
+            
+            loadLevel();
+        }
+        
+        // Restart entire game
+        function restartGame() {
+            if (confirm('Are you sure you want to restart? All progress will be lost.')) {
+                currentLevel = 0;
+                totalScore = 0;
+                scoreValueElement.textContent = totalScore;
+                loadLevel();
+            }
+        }
+        
+        // Load current level
+        function loadLevel() {
+            // Set level size
+            rows = LEVELS[currentLevel].rows;
+            cols = LEVELS[currentLevel].cols;
+            
+            // Generate maze
+            createEmptyMaze();
+            generateMaze();
+            drawMaze();
+            
+            // Reset stats
+            steps = 0;
+            seconds = 0;
+            stepsValueElement.textContent = steps;
+            timeValueElement.textContent = '0s';
+            levelValueElement.textContent = currentLevel + 1;
+            
+            // Start timer
+            startTimer();
+        }
+        
+        // === TIMER ===
+        
+        function startTimer() {
+            if (timer) clearInterval(timer);
+            seconds = 0;
+            
+            timer = setInterval(() => {
+                seconds++;
+                timeValueElement.textContent = `${seconds}s`;
+            }, 1000);
+        }
+        
+        // === EVENT LISTENERS ===
+        
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (levelCompleteModal.style.display === 'flex') return;
+            
+            switch(e.key) {
+                case 'ArrowUp':
+                case 'w':
+                case 'W':
+                    e.preventDefault();
+                    movePlayer(-1, 0);
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                case 'D':
+                    e.preventDefault();
+                    movePlayer(0, 1);
+                    break;
+                case 'ArrowDown':
+                case 's':
+                case 'S':
+                    e.preventDefault();
+                    movePlayer(1, 0);
+                    break;
+                case 'ArrowLeft':
+                case 'a':
+                case 'A':
+                    e.preventDefault();
+                    movePlayer(0, -1);
+                    break;
+            }
+        });
+        
+        // Button controls
+        resetButton.addEventListener('click', resetPlayerPosition);
+        restartButton.addEventListener('click', restartGame);
+        nextLevelButton.addEventListener('click', nextLevel);
+        
+        // Window resize
+        window.addEventListener('resize', () => {
+            if (maze.length > 0) {
+                drawMaze();
+            }
+        });
+        
+        // === INITIALIZE GAME ===
+        window.addEventListener('DOMContentLoaded', () => {
+            loadLevel();
+        });
+    </script>
+</body>
+</html>

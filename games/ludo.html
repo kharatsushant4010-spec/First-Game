@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classic Ludo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #aaa;
+            margin-bottom: 20px;
+        }
+
+        .game-board-container {
+            position: relative;
+        }
+
+        #board {
+            background-color: #f8f8f8;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .game-controls {
+            background: rgba(30, 30, 46, 0.9);
+            border-radius: 15px;
+            padding: 25px;
+            width: 300px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .player-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .player-turn {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .current-player {
+            padding: 10px;
+            border-radius: 8px;
+            display: inline-block;
+            min-width: 120px;
+        }
+
+        .dice-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .dice {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s;
+            user-select: none;
+        }
+
+        .dice:hover {
+            transform: scale(1.05);
+        }
+
+        .dice.rolling {
+            animation: roll 0.5s ease-in-out;
+        }
+
+        @keyframes roll {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.1); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        .roll-btn {
+            background: linear-gradient(to bottom, #ffd700, #ffaa00);
+            color: #333;
+            border: none;
+            border-radius: 50px;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 5px 0 #cc8800;
+        }
+
+        .roll-btn:hover {
+            background: linear-gradient(to bottom, #ffed4e, #ffbb33);
+            transform: translateY(-2px);
+        }
+
+        .roll-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #cc8800;
+        }
+
+        .roll-btn:disabled {
+            background: #666;
+            color: #999;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 5px 0 #444;
+        }
+
+        .player-status {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .player-box {
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .player-box.active {
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            transform: scale(1.05);
+        }
+
+        .player-tokens {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .token-status {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 0, 0, 0.3);
+        }
+
+        .token-status.home {
+            background-color: #666;
+        }
+
+        .token-status.on-board {
+            background-color: #fff;
+        }
+
+        .token-status.finished {
+            background-color: #4CAF50;
+        }
+
+        .game-rules {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .game-rules h3 {
+            color: #ffd700;
+            margin-bottom: 8px;
+        }
+
+        .game-rules ul {
+            padding-left: 20px;
+        }
+
+        .game-rules li {
+            margin-bottom: 5px;
+        }
+
+        .message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+            z-index: 10;
+            display: none;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            border: 2px solid #ffd700;
+        }
+
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 1000px) {
+            .container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .game-controls {
+                width: 100%;
+                max-width: 500px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>CLASSIC LUDO</h1>
+        <div class="subtitle">The timeless board game brought to your browser</div>
+    </header>
+
+    <div class="container">
+        <div class="game-board-container">
+            <canvas id="board" width="600" height="600"></canvas>
+            <div id="message" class="message"></div>
+        </div>
+
+        <div class="game-controls">
+            <div class="player-info">
+                <div class="player-turn">Current Turn</div>
+                <div id="currentPlayer" class="current-player" style="background-color: #e53935; color: white;">RED</div>
+            </div>
+
+            <div class="dice-container">
+                <div id="dice" class="dice">🎲</div>
+                <button id="rollBtn" class="roll-btn" onclick="rollDice()">ROLL DICE</button>
+                <div id="diceValue" style="font-size: 1.2rem; font-weight: bold;">Click to roll</div>
+            </div>
+
+            <div class="player-status">
+                <div id="redPlayer" class="player-box" style="background-color: rgba(229, 57, 53, 0.3);">
+                    <div>RED</div>
+                    <div class="player-tokens">
+                        <div class="token-status home" id="redToken0"></div>
+                        <div class="token-status home" id="redToken1"></div>
+                        <div class="token-status home" id="redToken2"></div>
+                        <div class="token-status home" id="redToken3"></div>
+                    </div>
+                </div>
+                
+                <div id="greenPlayer" class="player-box" style="background-color: rgba(67, 160, 71, 0.3);">
+                    <div>GREEN</div>
+                    <div class="player-tokens">
+                        <div class="token-status home" id="greenToken0"></div>
+                        <div class="token-status home" id="greenToken1"></div>
+                        <div class="token-status home" id="greenToken2"></div>
+                        <div class="token-status home" id="greenToken3"></div>
+                    </div>
+                </div>
+                
+                <div id="yellowPlayer" class="player-box" style="background-color: rgba(253, 216, 53, 0.3);">
+                    <div>YELLOW</div>
+                    <div class="player-tokens">
+                        <div class="token-status home" id="yellowToken0"></div>
+                        <div class="token-status home" id="yellowToken1"></div>
+                        <div class="token-status home" id="yellowToken2"></div>
+                        <div class="token-status home" id="yellowToken3"></div>
+                    </div>
+                </div>
+                
+                <div id="bluePlayer" class="player-box" style="background-color: rgba(30, 136, 229, 0.3);">
+                    <div>BLUE</div>
+                    <div class="player-tokens">
+                        <div class="token-status home" id="blueToken0"></div>
+                        <div class="token-status home" id="blueToken1"></div>
+                        <div class="token-status home" id="blueToken2"></div>
+                        <div class="token-status home" id="blueToken3"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-rules">
+                <h3>Game Rules</h3>
+                <ul>
+                    <li>Roll a 6 to bring a token out of home</li>
+                    <li>Move tokens according to dice value</li>
+                    <li>Capture opponent's token by landing on same cell</li>
+                    <li>Get an extra turn when you roll a 6</li>
+                    <li>First to get all 4 tokens to finish wins!</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        Classic Ludo Game | Built with HTML5 Canvas & JavaScript
+    </footer>
+
+    <script>
+        // Game constants
+        const COLORS = {
+            RED: { name: "RED", hex: "#e53935", light: "rgba(229, 57, 53, 0.3)" },
+            GREEN: { name: "GREEN", hex: "#43a047", light: "rgba(67, 160, 71, 0.3)" },
+            YELLOW: { name: "YELLOW", hex: "#fdd835", light: "rgba(253, 216, 53, 0.3)" },
+            BLUE: { name: "BLUE", hex: "#1e88e5", light: "rgba(30, 136, 229, 0.3)" }
+        };
+
+        const PLAYER_ORDER = [COLORS.RED, COLORS.GREEN, COLORS.YELLOW, COLORS.BLUE];
+        
+        // Game state
+        let currentPlayerIndex = 0;
+        let diceValue = 0;
+        let diceRolled = false;
+        let gameActive = true;
+        let selectedToken = null;
+
+        // Player data structure
+        const players = {
+            RED: {
+                color: COLORS.RED,
+                startPos: 0,
+                homePositions: [{x: 140, y: 140}, {x: 140, y: 220}, {x: 220, y: 140}, {x: 220, y: 220}],
+                tokens: [
+                    { id: 0, position: -1, isHome: true, isFinished: false, pathIndex: -1 },
+                    { id: 1, position: -1, isHome: true, isFinished: false, pathIndex: -1 },
+                    { id: 2, position: -1, isHome: true, isFinished: false, pathIndex: -1 },
+                    { id: 3, position: -1, isHome: true, isFinished: false, pathIndex: -1 }
+                ],
+                finishPositions: [{x: 320, y: 140}, {x: 320, y: 180}, {x: 320, y: 220}, {x: 320, y: 260}],
+                finishedCount: 0
+            },
+            GREEN: {
+                color: COLORS.GREEN,
+                startPos: 13,
+                homePositions: [{x: 420, y: 140}, {x: 420, y: 220}, {x: 500, y: 140}, {x: 500, y: 220}],
+                tokens: [
+                    { id: 0, position: -1, isHome: true, isFinished: false, pathIndex: -1 },
+                    { id: 1, position: -1, isHome: true, isFinished: false, pathIndex: -1 },
+                    { id: 2, position: -1, isHome: true, isFinished: false, pathIndex: -1 },
+                    { id: 3, position: -1, isHome: true, isFinished: false, pathIndex: -1 }
+                ],
+                finishPositions: [{x: 380, y: 320}, {x: 340, y: 320}, {x: 300, y: 320}, {x: 260, y: 320}],
+                finishedCount: 0
+            },
+            YELLOW: {
+                color: COLORS.YELLOW,
+                startPos: 26,
+                homePositions: [{x: 420, y: 420}, {x: 420, y: 500}, {x: 500, y: 420}, {x: 500, y: 500}],
+                tokens: [
+                    { id: 0, position: -1, isHome: true, isFinished: false, pathIndex: -1 },
+                    { id: 1, position: -1, isHome: true, isFinished: false, pathIndex: -1 },
+                    { id: 2, position: -1, isHome: true, isFinished: false, pathIndex: -1 },
+                    { id: 3, position: -1, isHome: true, isFinished: false, pathIndex: -1 }
+                ],
+                finishPositions: [{x: 320, y: 380}, {x: 320, y: 420}, {x: 320, y: 460}, {x: 320, y: 500}],
+                finishedCount: 0
+            },
+            BLUE: {
+                color: COLORS.BLUE,
+                startPos: 39,
+                homePositions: [{x: 140, y: 420}, {x: 140, y: 500}, {x: 220, y: 420}, {x: 220, y: 500}],
+                tokens: [
+                    { id: 0, position: -1, isHome: true, isFinished: false, pathIndex: -1 },
+                    { id: 1, position: -1, isHome: true, isFinished: false, pathIndex: -1 },
+                    { id: 2, position: -1, isHome: true, isFinished: false, pathIndex: -1 },
+                    { id: 3, position: -1, isHome: true, isFinished: false, pathIndex: -1 }
+                ],
+                finishPositions: [{x: 140, y: 320}, {x: 180, y: 320}, {x: 220, y: 320}, {x: 260, y: 320}],
+                finishedCount: 0
+            }
+        };
+
+        // Board path positions (52 cells in total)
+        const boardPath = [];
+        const cellSize = 40;
+
+        // Initialize the game board
+        function initBoard() {
+            const canvas = document.getElementById('board');
+            const ctx = canvas.getContext('2d');
+            
+            // Draw the board background
+            ctx.fillStyle = '#f8f8f8';
+            ctx.fillRect(0, 0, 600, 600);
+            
+            // Draw the outer grid
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            // Draw vertical lines
+            for (let i = 0; i <= 15; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * cellSize, 0);
+                ctx.lineTo(i * cellSize, 600);
+                ctx.stroke();
+            }
+            
+            // Draw horizontal lines
+            for (let i = 0; i <= 15; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, i * cellSize);
+                ctx.lineTo(600, i * cellSize);
+                ctx.stroke();
+            }
+            
+            // Draw the four colored home areas
+            drawHomeArea(ctx, 0, 0, COLORS.RED.hex);
+            drawHomeArea(ctx, 360, 0, COLORS.GREEN.hex);
+            drawHomeArea(ctx, 0, 360, COLORS.BLUE.hex);
+            drawHomeArea(ctx, 360, 360, COLORS.YELLOW.hex);
+            
+            // Draw the center diamond
+            drawCenterDiamond(ctx);
+            
+            // Draw the paths
+            drawPaths(ctx);
+            
+            // Draw player tokens
+            drawTokens(ctx);
+            
+            // Add click event listener to the canvas
+            canvas.addEventListener('click', handleCanvasClick);
+        }
+
+        // Draw a home area for a player
+        function drawHomeArea(ctx, x, y, color) {
+            // Main colored square
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, 240, 240);
+            
+            // Inner white square
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(x + 40, y + 40, 160, 160);
+            
+            // Draw home circles
+            ctx.fillStyle = color;
+            const positions = [
+                [x + 80, y + 80], [x + 80, y + 160], 
+                [x + 160, y + 80], [x + 160, y + 160]
+            ];
+            
+            positions.forEach(pos => {
+                ctx.beginPath();
+                ctx.arc(pos[0], pos[1], 18, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+        }
+
+        // Draw the center diamond
+        function drawCenterDiamond(ctx) {
+            // Diamond with four colors
+            ctx.fillStyle = COLORS.RED.hex;
+            ctx.beginPath();
+            ctx.moveTo(300, 240);
+            ctx.lineTo(360, 300);
+            ctx.lineTo(300, 360);
+            ctx.fill();
+            
+            ctx.fillStyle = COLORS.GREEN.hex;
+            ctx.beginPath();
+            ctx.moveTo(300, 240);
+            ctx.lineTo(240, 300);
+            ctx.lineTo(300, 360);
+            ctx.fill();
+            
+            ctx.fillStyle = COLORS.YELLOW.hex;
+            ctx.beginPath();
+            ctx.moveTo(240, 300);
+            ctx.lineTo(300, 360);
+            ctx.lineTo(360, 300);
+            ctx.fill();
+            
+            ctx.fillStyle = COLORS.BLUE.hex;
+            ctx.beginPath();
+            ctx.moveTo(300, 240);
+            ctx.lineTo(360, 300);
+            ctx.lineTo(240, 300);
+            ctx.fill();
+            
+            // Center circle
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(300, 300, 30, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+        }
+
+        // Draw the game paths
+        function drawPaths(ctx) {
+            // Clear the path array
+            boardPath.length = 0;
+            
+            // Define path coordinates (simplified rectangular path)
+            const pathCoords = [];
+            
+            // Top row (left to right)
+            for (let i = 5; i <= 9; i++) {
+                pathCoords.push({x: i * cellSize + cellSize/2, y: 6 * cellSize + cellSize/2});
+            }
+            
+            // Right column (top to bottom)
+            for (let i = 6; i <= 9; i++) {
+                pathCoords.push({x: 9 * cellSize + cellSize/2, y: i * cellSize + cellSize/2});
+            }
+            
+            // Bottom row (right to left)
+            for (let i = 9; i >= 5; i--) {
+                pathCoords.push({x: i * cellSize + cellSize/2, y: 9 * cellSize + cellSize/2});
+            }
+            
+            // Left column (bottom to top)
+            for (let i = 9; i >= 6; i--) {
+                pathCoords.push({x: 6 * cellSize + cellSize/2, y: i * cellSize + cellSize/2});
+            }
+            
+            // Add more cells to complete the 52-cell path
+            // This is a simplified representation
+            for (let i = 0; i < 52; i++) {
+                const angle = (Math.PI * 2 / 52) * i;
+                const radius = 180;
+                boardPath.push({
+                    x: 300 + Math.cos(angle) * radius,
+                    y: 300 + Math.sin(angle) * radius
+                });
+            }
+            
+            // Draw the path circles
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            boardPath.forEach((pos, index) => {
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, 15, 0, Math.PI * 2);
+                
+                // Color code special positions
+                if (index === 0) ctx.fillStyle = COLORS.RED.hex;
+                else if (index === 13) ctx.fillStyle = COLORS.GREEN.hex;
+                else if (index === 26) ctx.fillStyle = COLORS.YELLOW.hex;
+                else if (index === 39) ctx.fillStyle = COLORS.BLUE.hex;
+                else ctx.fillStyle = '#ddd';
+                
+                ctx.fill();
+                ctx.stroke();
+                
+                // Draw cell number (for debugging)
+                ctx.fillStyle = '#333';
+                ctx.font = '10px Arial';
+                ctx.fillText(index, pos.x - 5, pos.y + 3);
+            });
+        }
+
+        // Draw all player tokens
+        function drawTokens(ctx) {
+            Object.values(players).forEach(player => {
+                player.tokens.forEach((token, index) => {
+                    let x, y;
+                    
+                    if (token.isFinished) {
+                        // Token in finish area
+                        const finishPos = player.finishPositions[token.id];
+                        x = finishPos.x;
+                        y = finishPos.y;
+                    } else if (token.isHome) {
+                        // Token in home
+                        const homePos = player.homePositions[token.id];
+                        x = homePos.x;
+                        y = homePos.y;
+                    } else {
+                        // Token on the board path
+                        x = boardPath[token.pathIndex].x;
+                        y = boardPath[token.pathIndex].y;
+                    }
+                    
+                    // Draw the token
+                    ctx.beginPath();
+                    ctx.arc(x, y, 18, 0, Math.PI * 2);
+                    ctx.fillStyle = player.color.hex;
+                    ctx.fill();
+                    
+                    // Draw token border
+                    ctx.strokeStyle = token === selectedToken ? '#fff' : '#333';
+                    ctx.lineWidth = token === selectedToken ? 3 : 2;
+                    ctx.stroke();
+                    
+                    // Draw token number
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 14px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(token.id + 1, x, y);
+                });
+            });
+        }
+
+        // Handle canvas click for token selection
+        function handleCanvasClick(event) {
+            if (!diceRolled || !gameActive) return;
+            
+            const rect = event.target.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            
+            const currentPlayer = PLAYER_ORDER[currentPlayerIndex];
+            const player = players[currentPlayer.name];
+            
+            // Check if clicked on a token of the current player
+            for (let i = 0; i < player.tokens.length; i++) {
+                const token = player.tokens[i];
+                let tokenX, tokenY;
+                
+                if (token.isFinished) {
+                    // Token in finish area
+                    const finishPos = player.finishPositions[token.id];
+                    tokenX = finishPos.x;
+                    tokenY = finishPos.y;
+                } else if (token.isHome) {
+                    // Token in home
+                    const homePos = player.homePositions[token.id];
+                    tokenX = homePos.x;
+                    tokenY = homePos.y;
+                } else {
+                    // Token on the board path
+                    tokenX = boardPath[token.pathIndex].x;
+                    tokenY = boardPath[token.pathIndex].y;
+                }
+                
+                // Check if click is within token bounds
+                const distance = Math.sqrt((x - tokenX) ** 2 + (y - tokenY) ** 2);
+                
+                if (distance <= 20) {
+                    // Check if this token can be moved
+                    if (canMoveToken(player, token)) {
+                        selectedToken = token;
+                        moveSelectedToken();
+                        return;
+                    }
+                }
+            }
+        }
+
+        // Check if a token can be moved
+        function canMoveToken(player, token) {
+            if (token.isFinished) return false;
+            
+            if (token.isHome) {
+                // Token can only leave home with a 6
+                return diceValue === 6;
+            } else {
+                // Token on board can always move
+                return true;
+            }
+        }
+
+        // Move the selected token
+        function moveSelectedToken() {
+            if (!selectedToken) return;
+            
+            const currentPlayer = PLAYER_ORDER[currentPlayerIndex];
+            const player = players[currentPlayer.name];
+            
+            if (selectedToken.isHome && diceValue === 6) {
+                // Move token from home to start position
+                selectedToken.isHome = false;
+                selectedToken.pathIndex = player.startPos;
+                selectedToken.position = 0;
+                
+                showMessage(`${currentPlayer.name} token entered the board!`);
+            } else if (!selectedToken.isHome) {
+                // Move token along the path
+                const newPathIndex = (selectedToken.pathIndex + diceValue) % boardPath.length;
+                
+                // Check for collision with other tokens
+                const collision = checkCollision(newPathIndex, currentPlayer.name);
+                if (collision) {
+                    // Send the collided token home
+                    const [collidedPlayerName, collidedToken] = collision;
+                    players[collidedPlayerName].tokens[collidedToken.id].isHome = true;
+                    players[collidedPlayerName].tokens[collidedToken.id].pathIndex = -1;
+                    players[collidedPlayerName].tokens[collidedToken.id].position = -1;
+                    
+                    showMessage(`${currentPlayer.name} captured ${collidedPlayerName}'s token!`);
+                }
+                
+                selectedToken.pathIndex = newPathIndex;
+                selectedToken.position += diceValue;
+                
+                // Check if token can finish
+                if (selectedToken.position >= 52) {
+                    selectedToken.isFinished = true;
+                    selectedToken.pathIndex = -1;
+                    player.finishedCount++;
+                    
+                    showMessage(`${currentPlayer.name} token reached finish!`);
+                    
+                    // Check for win condition
+                    if (player.finishedCount === 4) {
+                        gameActive = false;
+                        showMessage(`${currentPlayer.name} WINS THE GAME!`, true);
+                        document.getElementById('rollBtn').disabled = true;
+                    }
+                }
+            }
+            
+            // Update UI
+            updatePlayerStatus();
+            diceRolled = false;
+            selectedToken = null;
+            
+            // Switch turn unless a 6 was rolled
+            if (diceValue !== 6) {
+                currentPlayerIndex = (currentPlayerIndex + 1) % 4;
+            }
+            
+            updateCurrentPlayerDisplay();
+            initBoard(); // Redraw the board
+        }
+
+        // Check for collision with other tokens
+        function checkCollision(pathIndex, currentPlayerName) {
+            for (const playerName in players) {
+                if (playerName === currentPlayerName) continue;
+                
+                const player = players[playerName];
+                for (const token of player.tokens) {
+                    if (!token.isHome && !token.isFinished && token.pathIndex === pathIndex) {
+                        return [playerName, token];
+                    }
+                }
+            }
+            return null;
+        }
+
+        // Roll the dice
+        function rollDice() {
+            if (!gameActive) return;
+            
+            const dice = document.getElementById('dice');
+            const rollBtn = document.getElementById('rollBtn');
+            
+            // Disable roll button during animation
+            rollBtn.disabled = true;
+            dice.classList.add('rolling');
+            
+            // Random dice values for animation effect
+            let rolls = 0;
+            const rollInterval = setInterval(() => {
+                diceValue = Math.floor(Math.random() * 6) + 1;
+                dice.textContent = getDiceFace(diceValue);
+                rolls++;
+                
+                if (rolls > 10) {
+                    clearInterval(rollInterval);
+                    dice.classList.remove('rolling');
+                    
+                    // Final dice value
+                    diceValue = Math.floor(Math.random() * 6) + 1;
+                    dice.textContent = getDiceFace(diceValue);
+                    document.getElementById('diceValue').textContent = `You rolled: ${diceValue}`;
+                    
+                    diceRolled = true;
+                    
+                    // Check if player has any movable tokens
+                    const currentPlayer = PLAYER_ORDER[currentPlayerIndex];
+                    const player = players[currentPlayer.name];
+                    const movableTokens = player.tokens.filter(token => canMoveToken(player, token));
+                    
+                    if (movableTokens.length === 0) {
+                        showMessage(`No moves available for ${currentPlayer.name}`);
+                        currentPlayerIndex = (currentPlayerIndex + 1) % 4;
+                        updateCurrentPlayerDisplay();
+                        diceRolled = false;
+                    }
+                    
+                    rollBtn.disabled = false;
+                    initBoard(); // Redraw board to show possible moves
+                }
+            }, 50);
+        }
+
+        // Get dice face emoji based on value
+        function getDiceFace(value) {
+            const faces = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+            return faces[value - 1] || '🎲';
+        }
+
+        // Update the current player display
+        function updateCurrentPlayerDisplay() {
+            const currentPlayer = PLAYER_ORDER[currentPlayerIndex];
+            const currentPlayerEl = document.getElementById('currentPlayer');
+            
+            currentPlayerEl.textContent = currentPlayer.name;
+            currentPlayerEl.style.backgroundColor = currentPlayer.hex;
+            
+            // Update active player in status
+            document.querySelectorAll('.player-box').forEach(box => {
+                box.classList.remove('active');
+            });
+            
+            document.getElementById(`${currentPlayer.name.toLowerCase()}Player`).classList.add('active');
+        }
+
+        // Update player token status display
+        function updatePlayerStatus() {
+            for (const playerName in players) {
+                const player = players[playerName];
+                
+                player.tokens.forEach((token, index) => {
+                    const tokenEl = document.getElementById(`${playerName.toLowerCase()}Token${index}`);
+                    
+                    if (token.isFinished) {
+                        tokenEl.className = 'token-status finished';
+                    } else if (token.isHome) {
+                        tokenEl.className = 'token-status home';
+                    } else {
+                        tokenEl.className = 'token-status on-board';
+                    }
+                });
+            }
+        }
+
+        // Show a temporary message
+        function showMessage(text, permanent = false) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.style.display = 'block';
+            
+            if (!permanent) {
+                setTimeout(() => {
+                    messageEl.style.display = 'none';
+                }, 2000);
+            }
+        }
+
+        // Initialize the game
+        function initGame() {
+            initBoard();
+            updateCurrentPlayerDisplay();
+            updatePlayerStatus();
+            
+            // Add dice click event
+            document.getElementById('dice').addEventListener('click', rollDice);
+        }
+
+        // Start the game when the page loads
+        window.onload = initGame;
+    </script>
+</body>
+</html>
